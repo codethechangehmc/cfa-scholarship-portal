@@ -2,7 +2,7 @@
   "name": "cfa-scholarship-portal",
   "version": "1.0.0",
   "scripts": {
-    "docker": "docker compose up --always-recreate-deps --wait",
+    "docker": "docker compose up -d --always-recreate-deps",
     "docker:build": "docker compose build"
   },
   "private": true,
