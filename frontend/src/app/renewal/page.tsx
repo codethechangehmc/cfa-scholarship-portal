@@ -81,6 +81,8 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
   const [agreed, setAgreed] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [showGuidelines, setShowGuidelines] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   const sections: Section[] = [
     { title: 'Personal Information', icon: User },
@@ -111,14 +113,120 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!agreed) {
       alert('Please agree to the scholarship terms to submit.');
       return;
     }
-    console.log('Form submitted:', formData);
-    setSubmitted(true);
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Generate a temporary userId (in production, this would come from auth)
+      const tempUserId = '000000000000000000000000'; // Placeholder - replace with real auth later
+
+      // Map form data to backend schema
+      const applicationData = {
+        userId: tempUserId,
+        academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+        personalInfo: {
+          fullName: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: formData.phone,
+          mailingAddress: {
+            street: formData.address.split(',')[0] || formData.address,
+            city: formData.address.split(',')[1]?.trim() || '',
+            state: formData.address.split(',')[2]?.trim() || '',
+            zipCode: formData.address.split(',')[3]?.trim() || ''
+          },
+          dateOfBirth: formData.dob,
+          currentAge: parseInt(formData.currentAge) || undefined
+        },
+        educationInfo: {
+          hasHighSchoolDiploma: formData.hasDiploma === 'yes',
+          collegeName: formData.schoolName,
+          isAccepted: true,
+          yearInSchool: formData.yearInSchool,
+          attendanceType: formData.attendance,
+          unitsEnrolled: parseInt(formData.units) || 0,
+          currentGPA: parseFloat(formData.gpa) || 0,
+          majorOrCourseOfStudy: formData.major || undefined
+        },
+        livingSituation: {
+          currentDescription: formData.currentLiving,
+          willContinue: formData.continueLiving === 'yes',
+          futurePlans: formData.futurePlans || undefined
+        },
+        employmentInfo: {
+          isEmployed: formData.employed === 'yes',
+          employer: formData.workplace || undefined,
+          position: formData.positionTitle || undefined,
+          responsibilities: formData.responsibilities || undefined,
+          hourlyRate: parseFloat(formData.payRate) || undefined,
+          hoursPerWeek: parseInt(formData.hoursPerWeek) || undefined,
+          employerContact: {
+            name: formData.employerContact || '',
+            phoneOrEmail: formData.employerPhone || ''
+          },
+          plansToContinueWhileInSchool: formData.continueWorking === 'yes' || undefined,
+          isSeekingEmployment: formData.seekingEmployment === 'yes' || undefined
+        },
+        essays: {
+          reasonForRequest: formData.scholarshipReason,
+          educationAndCareerGoals: formData.goals,
+          whyGoodCandidate: formData.whyCandidate,
+          howScholarshipHelped: formData.howHelped || undefined
+        },
+        requiredDocuments: {
+          highSchoolDiplomaOrGED: {
+            required: false,
+            uploaded: false
+          },
+          transcripts: {
+            required: true,
+            uploaded: false
+          },
+          enrollmentVerification: {
+            required: true,
+            uploaded: false
+          },
+          employmentVerification: {
+            required: formData.attendance === 'Part Time',
+            uploaded: false
+          },
+          recommendationLetter: {
+            submitted: false
+          }
+        },
+        adminNotes: []
+      };
+
+      // Call backend API for renewal
+      const response = await fetch('http://localhost:8080/api/applications/renewal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(applicationData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('Renewal application submitted successfully!', result);
+        setSubmitted(true);
+      } else {
+        throw new Error(result.message || 'Failed to submit renewal application');
+      }
+    } catch (err: any) {
+      console.error('Submission error:', err);
+      setError(err.message || 'Failed to submit renewal application. Please try again.');
+      alert('Error: ' + (err.message || 'Failed to submit renewal application. Please try again.'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const nextSection = (): void => {
@@ -1037,15 +1145,15 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
               ) : (
                 <button
                   type="submit"
-                  disabled={!agreed}
+                  disabled={!agreed || loading}
                   className={`px-8 py-3 rounded-lg font-semibold flex items-center transition-colors ${
-                    agreed
+                    agreed && !loading
                       ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
                   <Send className="w-5 h-5 mr-2" />
-                  Submit Application
+                  {loading ? 'Submitting...' : 'Submit Application'}
                 </button>
               )}
             </div>

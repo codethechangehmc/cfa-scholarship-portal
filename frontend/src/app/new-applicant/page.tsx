@@ -106,6 +106,8 @@ export default function ScholarshipPortal(): React.ReactElement {
   const [currentSection, setCurrentSection] = useState<number>(0);
   const [agreed, setAgreed] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   const sections: Section[] = [
     { title: 'Personal Information', icon: User },
@@ -129,14 +131,137 @@ export default function ScholarshipPortal(): React.ReactElement {
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     if (!agreed) {
       alert('Please agree to the scholarship terms to submit.');
       return;
     }
-    console.log('Form submitted:', formData);
-    setSubmitted(true);
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // Generate a temporary userId (in production, this would come from auth)
+      const tempUserId = '000000000000000000000000'; // Placeholder - replace with real auth later
+
+      // Map form data to backend schema
+      const applicationData = {
+        userId: tempUserId,
+        academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+        personalInfo: {
+          fullName: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: formData.phone,
+          mailingAddress: {
+            street: formData.address.split(',')[0] || formData.address,
+            city: formData.address.split(',')[1]?.trim() || '',
+            state: formData.address.split(',')[2]?.trim() || '',
+            zipCode: formData.address.split(',')[3]?.trim() || ''
+          },
+          dateOfBirth: formData.dob
+        },
+        educationInfo: {
+          hasHighSchoolDiploma: formData.hasDiploma === 'yes',
+          diplomaSource: formData.diplomaFrom || undefined,
+          estimatedGraduationDate: formData.graduationDate || undefined,
+          collegeName: formData.schoolName,
+          isAccepted: formData.accepted === 'yes',
+          yearInSchool: formData.yearInSchool,
+          attendanceType: formData.attendance,
+          unitsEnrolled: parseInt(formData.units) || 0,
+          currentGPA: parseFloat(formData.gpa) || 0
+        },
+        fosterCareInfo: {
+          agencyName: formData.agencyName,
+          socialWorker: {
+            name: formData.socialWorkerName,
+            email: formData.socialWorkerEmail,
+            relationship: formData.socialWorkerStatus
+          },
+          resourceParent: {
+            name: formData.resourceParentName,
+            address: formData.resourceParentAddress,
+            phoneOrEmail: formData.resourceParentContact,
+            relationship: formData.caregiverStatus
+          },
+          lengthInPlacement: formData.timeInPlacement
+        },
+        livingSituation: {
+          currentDescription: formData.currentLiving,
+          willContinue: formData.continueLiving === 'yes',
+          futurePlans: formData.futurePlans || undefined
+        },
+        employmentInfo: {
+          isEmployed: formData.employed === 'yes',
+          employer: formData.workplace || undefined,
+          position: formData.positionTitle || undefined,
+          responsibilities: formData.responsibilities || undefined,
+          hourlyRate: parseFloat(formData.payRate) || undefined,
+          hoursPerWeek: parseInt(formData.hoursPerWeek) || undefined,
+          employerContact: {
+            name: formData.employerContact || '',
+            phoneOrEmail: formData.employerPhone || ''
+          },
+          plansToContinueWhileInSchool: formData.continueWorking === 'yes' || undefined,
+          isSeekingEmployment: formData.seekingEmployment === 'yes' || undefined
+        },
+        essays: {
+          reasonForRequest: formData.scholarshipReason,
+          educationAndCareerGoals: formData.goals,
+          plansAfterFosterCare: formData.futurePlansDetailed || undefined,
+          otherResources: formData.otherResources || undefined,
+          nextStepIfDenied: formData.ifDenied || undefined,
+          whyGoodCandidate: formData.whyCandidate
+        },
+        requiredDocuments: {
+          highSchoolDiplomaOrGED: {
+            required: true,
+            uploaded: false
+          },
+          transcripts: {
+            required: true,
+            uploaded: false
+          },
+          enrollmentVerification: {
+            required: true,
+            uploaded: false
+          },
+          employmentVerification: {
+            required: formData.attendance === 'Part Time',
+            uploaded: false
+          },
+          recommendationLetter: {
+            submitted: false
+          }
+        },
+        adminNotes: []
+      };
+
+      // Call backend API
+      const response = await fetch('http://localhost:8080/api/applications/new', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(applicationData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('Application submitted successfully!', result);
+        setSubmitted(true);
+      } else {
+        throw new Error(result.message || 'Failed to submit application');
+      }
+    } catch (err: any) {
+      console.error('Submission error:', err);
+      setError(err.message || 'Failed to submit application. Please try again.');
+      alert('Error: ' + (err.message || 'Failed to submit application. Please try again.'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const nextSection = (): void => {
@@ -1169,15 +1294,15 @@ export default function ScholarshipPortal(): React.ReactElement {
               ) : (
                 <button
                   type="submit"
-                  disabled={!agreed}
+                  disabled={!agreed || loading}
                   className={`px-8 py-3 rounded-lg font-semibold flex items-center transition-colors ${
-                    agreed
+                    agreed && !loading
                       ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
                   <Send className="w-5 h-5 mr-2" />
-                  Submit Application
+                  {loading ? 'Submitting...' : 'Submit Application'}
                 </button>
               )}
             </div>

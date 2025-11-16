@@ -8,6 +8,14 @@ import mongoose from "mongoose";
 // import passport from "./utils/passportConfig";
 import routes from "./routes";
 
+// Import all models to ensure they're registered with Mongoose
+import "./models/User";
+import "./models/Application";
+import "./models/RenewalChecklist";
+import "./models/AcceptanceForm";
+import "./models/ReimbursementRequest";
+import "./models/File";
+
 const BACKEND_PORT = Number(process.env.BACKEND_PORT ?? 8080);
 const FRONTEND_ADDRESS = process.env.FRONTEND_ADDRESS ?? "*";
 const SESSION_SECRET = process.env.SESSION_SECRET ?? "dev-secret";
