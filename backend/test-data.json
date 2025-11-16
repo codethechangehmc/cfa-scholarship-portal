@@ -1,0 +1,60 @@
+{
+  "userId": "691a38a1b79095b032a60784",
+  "academicYear": "2024-2025",
+  "personalInfo": {
+    "fullName": "Jane Test Student",
+    "email": "jane.test@example.com",
+    "phone": "555-0123",
+    "mailingAddress": {
+      "street": "123 Test St",
+      "city": "San Francisco",
+      "state": "CA",
+      "zipCode": "94102"
+    },
+    "dateOfBirth": "2000-05-15"
+  },
+  "educationInfo": {
+    "hasHighSchoolDiploma": true,
+    "diplomaSource": "Lincoln High School",
+    "collegeName": "SF State University",
+    "isAccepted": true,
+    "yearInSchool": "Sophomore",
+    "attendanceType": "Full Time",
+    "unitsEnrolled": 15,
+    "currentGPA": 3.5
+  },
+  "livingSituation": {
+    "currentDescription": "Living with resource parent",
+    "willContinue": true
+  },
+  "employmentInfo": {
+    "isEmployed": false
+  },
+  "essays": {
+    "reasonForRequest": "I need financial assistance to continue my education.",
+    "educationAndCareerGoals": "I want to become a software engineer.",
+    "whyGoodCandidate": "I am dedicated and hardworking."
+  },
+  "requiredDocuments": {
+    "highSchoolDiplomaOrGED": {
+      "required": true,
+      "uploaded": false
+    },
+    "transcripts": {
+      "required": true,
+      "uploaded": false
+    },
+    "enrollmentVerification": {
+      "required": true,
+      "uploaded": false
+    },
+    "employmentVerification": {
+      "required": false,
+      "uploaded": false
+    },
+    "recommendationLetter": {
+      "submitted": false
+    }
+  },
+  "adminNotes": []
+}
