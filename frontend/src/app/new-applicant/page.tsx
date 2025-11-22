@@ -117,6 +117,19 @@ export default function ScholarshipPortal(): React.ReactElement {
     { title: 'Documents & Review', icon: CheckCircle }
   ];
 
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const isValidPhone = (phone: string): boolean => {
+  // Accepts formats like: (123) 456-7890, 123-456-7890, 1234567890
+  const phoneRegex = /^[\d\s\-\(\)]+$/;
+  const digitsOnly = phone.replace(/\D/g, '');
+  return digitsOnly.length === 10; // US phone numbers
+};
+
+
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const target = e.target as HTMLInputElement;
     const { name, value, type, checked } = target;
@@ -264,12 +277,126 @@ export default function ScholarshipPortal(): React.ReactElement {
     }
   };
 
-  const nextSection = (): void => {
-    if (currentSection < sections.length - 1) {
-      setCurrentSection(currentSection + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  //validation to ensure user has completed all required fields
+const validateCurrentSection = (): boolean => {
+  // section 0
+  if (currentSection === 0) {
+    const requiredFields = [
+      formData.firstName,
+      formData.lastName,
+      formData.email,
+      formData.phone,
+      formData.address,
+      formData.dob,
+      formData.hasDiploma,
+      formData.schoolName,
+      formData.accepted,
+      formData.yearInSchool,
+      formData.attendance,
+      formData.units,
+      formData.gpa
+    ];
+
+    
+    if (formData.email && !isValidEmail(formData.email)) {
+    alert('Please enter a valid email address.');
+    return false;
+  }
+
+  if (formData.phone && !isValidPhone(formData.phone)) {
+  alert('Please enter a valid 10-digit phone number.');
+  return false;
+}
+
+
+
+    if (formData.hasDiploma === 'yes' && !formData.diplomaFrom) {
+      return false;
     }
-  };
+    if (formData.hasDiploma === 'no' && !formData.graduationDate) {
+      return false;
+    }
+
+    return requiredFields.every(field => field !== '' && field !== null && field !== undefined);
+  }
+
+  // section 1
+  if (currentSection === 1) {
+    const requiredFields = [
+      formData.agencyName,
+      formData.socialWorkerName,
+      formData.socialWorkerStatus,
+      formData.socialWorkerEmail,
+      formData.resourceParentName,
+      formData.caregiverStatus,
+      formData.resourceParentAddress,
+      formData.resourceParentContact,
+      formData.timeInPlacement,
+      formData.currentLiving,
+      formData.continueLiving,
+      formData.employed
+    ];
+
+    if (formData.continueLiving === 'no' && !formData.futurePlans) {
+      return false;
+    }
+
+    return requiredFields.every(field => field !== '' && field !== null && field !== undefined);
+  }
+
+    // section 2
+  if (currentSection === 2) {
+    if (formData.employed === 'yes') {
+      const requiredFields = [
+        formData.workplace,
+        formData.payRate,
+        formData.hoursPerWeek,
+        formData.positionTitle,
+        formData.responsibilities,
+        formData.employerContact,
+        formData.employerPhone,
+        formData.continueWorking
+      ];
+      return requiredFields.every(field => field !== '' && field !== null && field !== undefined);
+    } else {
+      return formData.seekingEmployment !== '' && formData.seekingEmployment !== null;
+    }
+  }
+
+  // section 3
+  if (currentSection === 3) {
+    const requiredFields = [
+      formData.scholarshipReason,
+      formData.goals,
+      formData.futurePlansDetailed,
+      formData.otherResources,
+      formData.ifDenied,
+      formData.whyCandidate
+    ];
+    return requiredFields.every(field => field !== '' && field !== null && field !== undefined);
+  }
+
+  // section 4
+  if (currentSection === 4) {
+    return agreed;
+  }
+
+  return true;
+};
+
+const nextSection = (): void => {
+  if (!validateCurrentSection()) {
+    alert('Please fill out all required fields before continuing to the next section.');
+    return;
+  }
+  
+  if (currentSection < sections.length - 1) {
+    setCurrentSection(currentSection + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}; 
+
+  
 
   const prevSection = (): void => {
     if (currentSection > 0) {

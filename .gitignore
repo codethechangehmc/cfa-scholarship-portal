@@ -3,3 +3,7 @@ node_modules
 package-lock.json
 .yarn/*
 doc/
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
