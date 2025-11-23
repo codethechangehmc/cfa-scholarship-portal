@@ -11,6 +11,13 @@ const mongoose_1 = __importDefault(require("mongoose"));
 // import MongoStore from "connect-mongo";
 // import passport from "./utils/passportConfig";
 const routes_1 = __importDefault(require("./routes"));
+// Import all models to ensure they're registered with Mongoose
+require("./models/User");
+require("./models/Application");
+require("./models/RenewalChecklist");
+require("./models/AcceptanceForm");
+require("./models/ReimbursementRequest");
+require("./models/File");
 const BACKEND_PORT = Number(process.env.BACKEND_PORT ?? 8080);
 const FRONTEND_ADDRESS = process.env.FRONTEND_ADDRESS ?? "*";
 const SESSION_SECRET = process.env.SESSION_SECRET ?? "dev-secret";

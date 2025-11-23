@@ -2,6 +2,7 @@
 
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { FileText, User, Briefcase, Home, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import FileUpload from '@/components/FileUpload';
 
 interface FormData {
   firstName: string;
@@ -108,6 +109,16 @@ export default function ScholarshipPortal(): React.ReactElement {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, any>>({});
+  const [applicationId] = useState<string>(() => {
+    // Generate a temporary MongoDB ObjectId (24 hex characters)
+    // In production, this would come from the backend when the application is created
+    const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+    const randomHex = Array.from({ length: 16 }, () =>
+      Math.floor(Math.random() * 16).toString(16)
+    ).join('');
+    return timestamp + randomHex;
+  });
 
   const sections: Section[] = [
     { title: 'Personal Information', icon: User },
@@ -1289,72 +1300,93 @@ const nextSection = (): void => {
                     <AlertCircle className="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-blue-800">
-                        Before completing the application, please email the listed documents to Alexandra Ofstedahl at <strong>aofstedahl@trinityys.org</strong>
+                        Please upload the required documents below. Files should be in PDF, Word, JPG, or PNG format (max 10MB each).
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Please check off the items you have submitted via email <span className="text-red-500">*</span>
-                  </label>
-                  <div className="space-y-3">
-                    <label className="flex items-start p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value="diploma"
-                        checked={formData.documents.includes('diploma')}
-                        onChange={handleChange}
-                        className="mt-1 mr-3 w-5 h-5 text-indigo-600 flex-shrink-0"
-                      />
-                      <span className="text-sm">Copy High School Diploma or GED Certificate (if not yet available, please explain)</span>
-                    </label>
+                <div className="space-y-6">
+                  <FileUpload
+                    userId="000000000000000000000000"
+                    relatedEntityType="application"
+                    relatedEntityId={applicationId}
+                    documentType="diploma"
+                    label="High School Diploma or GED Certificate"
+                    onUploadSuccess={(file) => {
+                      setUploadedFiles(prev => ({ ...prev, diploma: file }));
+                    }}
+                    onUploadError={(error) => {
+                      console.error('Upload error:', error);
+                    }}
+                  />
 
-                    <label className="flex items-start p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value="transcripts"
-                        checked={formData.documents.includes('transcripts')}
-                        onChange={handleChange}
-                        className="mt-1 mr-3 w-5 h-5 text-indigo-600 flex-shrink-0"
-                      />
-                      <span className="text-sm">Copy of Transcripts with Current GPA</span>
-                    </label>
+                  <FileUpload
+                    userId="000000000000000000000000"
+                    relatedEntityType="application"
+                    relatedEntityId={applicationId}
+                    documentType="transcripts"
+                    label="Official Transcripts with Current GPA"
+                    onUploadSuccess={(file) => {
+                      setUploadedFiles(prev => ({ ...prev, transcripts: file }));
+                    }}
+                    onUploadError={(error) => {
+                      console.error('Upload error:', error);
+                    }}
+                  />
 
-                    <label className="flex items-start p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value="enrollment"
-                        checked={formData.documents.includes('enrollment')}
-                        onChange={handleChange}
-                        className="mt-1 mr-3 w-5 h-5 text-indigo-600 flex-shrink-0"
-                      />
-                      <span className="text-sm">Enrollment/Acceptance Verification and Class Schedule (if not yet available, please explain)</span>
-                    </label>
+                  <FileUpload
+                    userId="000000000000000000000000"
+                    relatedEntityType="application"
+                    relatedEntityId={applicationId}
+                    documentType="enrollment"
+                    label="Enrollment/Acceptance Verification and Class Schedule"
+                    onUploadSuccess={(file) => {
+                      setUploadedFiles(prev => ({ ...prev, enrollment: file }));
+                    }}
+                    onUploadError={(error) => {
+                      console.error('Upload error:', error);
+                    }}
+                  />
 
-                    <label className="flex items-start p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value="employment"
-                        checked={formData.documents.includes('employment')}
-                        onChange={handleChange}
-                        className="mt-1 mr-3 w-5 h-5 text-indigo-600 flex-shrink-0"
-                      />
-                      <span className="text-sm">Employment Verification (copy of paystub or letter from employer on letterhead): this item is required if not attending school full time</span>
-                    </label>
+                  {formData.attendance === 'part' && (
+                    <FileUpload
+                      userId="000000000000000000000000"
+                      relatedEntityType="application"
+                      relatedEntityId={applicationId}
+                      documentType="employment"
+                      label="Employment Verification (Required for Part-Time Students)"
+                      onUploadSuccess={(file) => {
+                        setUploadedFiles(prev => ({ ...prev, employment: file }));
+                      }}
+                      onUploadError={(error) => {
+                        console.error('Upload error:', error);
+                      }}
+                    />
+                  )}
 
-                    <label className="flex items-start p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        value="recommendations"
-                        checked={formData.documents.includes('recommendations')}
-                        onChange={handleChange}
-                        className="mt-1 mr-3 w-5 h-5 text-indigo-600 flex-shrink-0"
-                      />
-                      <span className="text-sm">Recommendation Forms (from 3 different sources; link on first page of application)</span>
-                    </label>
-                  </div>
+                  <FileUpload
+                    userId="000000000000000000000000"
+                    relatedEntityType="application"
+                    relatedEntityId={applicationId}
+                    documentType="recommendations"
+                    label="Recommendation Letters (from 3 different sources)"
+                    onUploadSuccess={(file) => {
+                      setUploadedFiles(prev => ({ ...prev, recommendations: file }));
+                    }}
+                    onUploadError={(error) => {
+                      console.error('Upload error:', error);
+                    }}
+                  />
+                </div>
+
+                <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 mt-6">
+                  <p className="text-sm text-gray-700">
+                    <strong>Note:</strong> You can still email additional documents to Alexandra Ofstedahl at{' '}
+                    <a href="mailto:aofstedahl@trinityys.org" className="text-indigo-600 hover:underline">
+                      aofstedahl@trinityys.org
+                    </a>
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 border border-gray-300 rounded-lg p-6 mt-8">
