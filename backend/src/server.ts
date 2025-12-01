@@ -16,7 +16,7 @@ const {
   DB_URL = 'mongodb://db:27017/cfa',
 } = process.env;
 
-const PRODUCTION = PRODUCTION_STR === 'true';
+const isProduction = PRODUCTION_STR === 'true';
 
 const app = express();
 
@@ -46,8 +46,8 @@ app.use(
     secret: SESSION_SECRET,
     cookie: {
       httpOnly: true,
-      secure: PRODUCTION,
-      sameSite: PRODUCTION ? 'none' : 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60,
     },
     store: MongoStore.create({
