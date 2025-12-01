@@ -45,7 +45,7 @@ router.post('/register', createUserValidation, async (req: Request, res: Respons
 
   const newUser = new User({
     email,
-    password: hashPassword(password),
+    password: await hashPassword(password),
     role: role ?? undefined,
     profile: profileData,
   });
@@ -161,11 +161,13 @@ router.put('/change-password', changePasswordValidation, async (req: Request, re
     const found = await User.findById(r.user._id);
     if (!found) return res.status(404).json({ message: 'User not found' });
 
-    found.password = hashPassword(password);
+    found.password = await hashPassword(password);
     await found.save();
+
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (err) {
     console.error(err);
+    
     return res.status(500).json({ message: 'Error updating password' });
   }
 });

@@ -1,21 +1,20 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
-import bcrypt from 'bcryptjs';
+import { comparePassword } from '../utils/bcryptHash';
 import User from '../models/User';
 
 // Set up Passport local strategy for authentication
 // Do we require username, email, or password to sign in? Or any of the above?
 // We probably want a strategies folder if we plan to add oauth in addition to local.
 passport.use(
-    new LocalStrategy(async (username: string, password: string, done) => {
+    new LocalStrategy({ usernameField: 'email' }, async (email: string, password: string, done) => {
     try {
-        const user = await User.findOne({ username }).select('username password').exec();
-        if (!user) return done(null, false, { message: 'Username or password is incorrect' });
+        const user = await User.findOne({ email }).select('email password').exec();
+        if (!user) return done(null, false, { message: 'Email or password is incorrect' });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return done(null, false, { message: 'Username or password is incorrect' });
+        const isMatch = await comparePassword(password, user.password);
+        if (!isMatch) return done(null, false, { message: 'Email or password is incorrect' });
 
-        // No error; User object from database
         return done(null, user);
     } catch (err) {
         return done(err as Error);

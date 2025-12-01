@@ -1,5 +1,23 @@
 import { body } from 'express-validator';
 
+const requireNameEitherTopLevelOrProfile = body().custom((_, { req }) => {
+  const hasProfile = req.body.profile && typeof req.body.profile === 'object';
+  const topFirst = req.body.firstName;
+  const topLast = req.body.lastName;
+
+  if (hasProfile) {
+    if (!req.body.profile.firstName || !req.body.profile.lastName) {
+      throw new Error('If profile is provided it must include firstName and lastName');
+    }
+    return true;
+  }
+
+  if (!topFirst || !topLast) {
+    throw new Error('Either profile (with firstName and lastName) or top-level firstName and lastName must be provided');
+  }
+  return true;
+});
+
 const passwordValidators = () => [
   body('password')
     .exists().withMessage('Password is required')
@@ -12,6 +30,8 @@ const passwordValidators = () => [
 ];
 
 export const createUserValidation = [
+  requireNameEitherTopLevelOrProfile,
+  
   body('email')
     .exists().withMessage('Email is required')
     .isEmail().withMessage('Email must be a valid email address')
