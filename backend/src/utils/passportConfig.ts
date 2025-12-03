@@ -8,17 +8,23 @@ import User from '../models/User';
 // We probably want a strategies folder if we plan to add oauth in addition to local.
 passport.use(
     new LocalStrategy({ usernameField: 'email' }, async (email: string, password: string, done) => {
-    try {
-        const user = await User.findOne({ email }).select('+password').exec();
-        if (!user) return done(null, false, { message: 'Invalid credentials' });
+        try {
+            const userWithPassword = await User.findOne({ email }).select('+password').exec();
+            if (!userWithPassword) return done(null, false, { message: 'Email or password is incorrect' });
 
-        const isMatch = await comparePassword(password, user.password);
-        if (!isMatch) return done(null, false, { message: 'Invalid credentials' });
+            const isMatch = await comparePassword(password, userWithPassword.password);
+            if (!isMatch) return done(null, false, { message: 'Email or password is incorrect' });
 
-        return done(null, user);
-    } catch (err) {
-        return done(err as Error);
-    }
+            const sanitizedUser = await User.findById(userWithPassword._id).exec();
+            if (!sanitizedUser) {
+                // extremely unlikely: user was removed between queries
+                return done(new Error('Authenticated user missing from database'));
+            }
+
+            return done(null, sanitizedUser);
+        } catch (err) {
+            return done(err as Error);
+        }
     })
 );
 
