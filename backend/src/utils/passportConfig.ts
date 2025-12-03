@@ -9,11 +9,11 @@ import User from '../models/User';
 passport.use(
     new LocalStrategy({ usernameField: 'email' }, async (email: string, password: string, done) => {
     try {
-        const user = await User.findOne({ email }).select('email password').exec();
-        if (!user) return done(null, false, { message: 'Email or password is incorrect' });
+        const user = await User.findOne({ email }).select('+password').exec();
+        if (!user) return done(null, false, { message: 'Invalid credentials' });
 
         const isMatch = await comparePassword(password, user.password);
-        if (!isMatch) return done(null, false, { message: 'Email or password is incorrect' });
+        if (!isMatch) return done(null, false, { message: 'Invalid credentials' });
 
         return done(null, user);
     } catch (err) {

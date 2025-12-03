@@ -7,25 +7,46 @@ export interface IUser extends Document {
   profile: {
     firstName: string;
     lastName: string;
-    phone: string;
-    dateOfBirth: Date;
+    phone?: string;
+    dateOfBirth?: Date;
   };
-  createdAt: Date;
+  emailVerified?: boolean;
+  emailVerificationToken?: string;
+  resetPasswordToken?: string;
 }
 
-const schema = new mongoose.Schema<IUser>({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['student', 'admin'], default: 'student', required: true },
-  profile: {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    phone: { type: String },
-    dateOfBirth: { type: Date },
+const userSchema = new mongoose.Schema<IUser>(
+  {
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true, select: false },
+    role: { type: String, enum: ['student', 'admin'], default: 'student', required: true },
+    profile: {
+      firstName: { type: String, required: true },
+      lastName: { type: String, required: true },
+      phone: { type: String },
+      dateOfBirth: { type: Date },
+    },
+    emailVerified: { type: Boolean, default: false },
+    emailVerificationToken: {
+      token: String,
+      expiresAt: Date,
+    },
+    resetPasswordToken: {
+      token: String,
+      expiresAt: Date,
+      used: { type: Boolean, default: false },
+    },
   },
-  createdAt: { type: Date, default: Date.now },
+  { timestamps: true }
+);
+
+userSchema.set('toJSON', {
+  transform: (_doc, ret) => {
+    const { password, __v, ...sanitized } = ret as unknown as Record<string, unknown>;
+    return sanitized;
+  },
 });
 
-const User: Model<IUser> = mongoose.model<IUser>('User', schema);
+const User: Model<IUser> = mongoose.model<IUser>('User', userSchema);
 
 export default User;
