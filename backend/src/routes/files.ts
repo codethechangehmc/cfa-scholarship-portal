@@ -3,6 +3,7 @@ import multer from "multer";
 import { uploadFileToS3, deleteFileFromS3, validateFile } from "../utils/s3Upload";
 import File from "../models/File";
 import mongoose from "mongoose";
+import { requireOwnershipOrAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -105,8 +106,9 @@ router.post("/upload", upload.single("file") as any, async (req: any, res: Respo
 /**
  * GET /api/files/:fileId
  * Get file metadata by ID
+ * Accesible to: owner or admin
  */
-router.get("/:fileId", async (req: Request, res: Response) => {
+router.get("/:fileId", requireOwnershipOrAdmin('userId'), async (req: Request, res: Response) => {
   try {
     const { fileId } = req.params;
 
@@ -177,8 +179,9 @@ router.get("/entity/:entityType/:entityId", async (req: Request, res: Response) 
  * DELETE /api/files/:fileId
  * Soft delete a file (marks as deleted but doesn't remove from S3)
  * To permanently delete from S3, include ?permanent=true
+ * Accesible to: owner or admin
  */
-router.delete("/:fileId", async (req: Request, res: Response) => {
+router.delete("/:fileId", requireOwnershipOrAdmin('userId'), async (req: Request, res: Response) => {
   try {
     const { fileId } = req.params;
     const { permanent } = req.query;

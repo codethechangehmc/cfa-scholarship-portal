@@ -10,6 +10,9 @@ import {
 } from '../validators/userValidation';
 import { hashPassword } from '../utils/bcryptHash';
 import { Session, SessionData } from 'express-session';
+import { ensureAuthenticated } from '../middleware/auth';
+
+const router = Router();
 
 type AuthSession = Session & Partial<SessionData>;
 
@@ -20,8 +23,6 @@ type AuthRequest = Request & {
   logout: (cb?: (err?: any) => void) => void;
   isAuthenticated?: () => boolean;
 };
-
-const router = Router();
 
 /**
  * Register
@@ -87,8 +88,9 @@ router.post('/login', (req: Request, res: Response, next: NextFunction) => {
 
 /**
  * Logout
+ * Accessible to: authenticated users
  */
-router.post('/logout', (req: Request, res: Response) => {
+router.post('/logout', ensureAuthenticated, (req: Request, res: Response) => {
   const r = req as AuthRequest;
 
   if (r.isAuthenticated && r.isAuthenticated()) {
@@ -106,22 +108,21 @@ router.post('/logout', (req: Request, res: Response) => {
 
 /**
  * Status - get current authenticated user
+ * Accessible to: authenticated users
  */
-router.get('/status', (req: Request, res: Response) => {
+router.get('/status', ensureAuthenticated, (req: Request, res: Response) => {
   const r = req as AuthRequest;
-  if (r.isAuthenticated && r.isAuthenticated()) {
-    const safeUser = { ...(r.user?.toObject ? r.user.toObject() : r.user) } as any;
-    if (safeUser) delete safeUser.password;
-    return res.json(safeUser);
-  }
-  return res.status(401).json({ message: 'Not authenticated' });
+  const safeUser = { ...(r.user?.toObject ? r.user.toObject() : r.user) } as any;
+  if (safeUser) delete safeUser.password;
+  return res.json(safeUser);
 });
 
 /**
  * Change email
  * Body: { email }
+ * Accessible to: authenticated users
  */
-router.put('/change-email', changeEmailValidation, async (req: Request, res: Response) => {
+router.put('/change-email', ensureAuthenticated, changeEmailValidation, async (req: Request, res: Response) => {
   const r = req as AuthRequest;
 
   const errors = validationResult(req);
@@ -147,8 +148,9 @@ router.put('/change-email', changeEmailValidation, async (req: Request, res: Res
 /**
  * Change password
  * Body: { password }
+ * Accessible to: authenticated users
  */
-router.put('/change-password', changePasswordValidation, async (req: Request, res: Response) => {
+router.put('/change-password', ensureAuthenticated, changePasswordValidation, async (req: Request, res: Response) => {
   const r = req as AuthRequest;
 
   const errors = validationResult(req);
@@ -175,8 +177,9 @@ router.put('/change-password', changePasswordValidation, async (req: Request, re
 /**
  * Update profile
  * Body: { profile: { firstName, lastName, phone, dateOfBirth } } OR top-level fields
+ * Accessible to: authenticated users
  */
-router.put('/profile', updateUserValidation, async (req: Request, res: Response) => {
+router.put('/profile',  ensureAuthenticated, updateUserValidation, async (req: Request, res: Response) => {
   const r = req as AuthRequest;
 
   const errors = validationResult(req);
@@ -213,8 +216,9 @@ router.put('/profile', updateUserValidation, async (req: Request, res: Response)
 
 /**
  * Delete user
+ * Accessible to: authenticated users
  */
-router.delete('/delete-user', async (req: Request, res: Response) => {
+router.delete('/delete-user', ensureAuthenticated, async (req: Request, res: Response) => {
   const r = req as AuthRequest;
 
   if (!(r.isAuthenticated && r.isAuthenticated())) return res.status(401).json({ message: 'User not authenticated' });

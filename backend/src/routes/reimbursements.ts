@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import ReimbursementRequest from "../models/ReimbursementRequest";
+import { requireAdmin, requireOwnershipOrAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -32,7 +33,8 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 // GET /api/reimbursements - Get all reimbursement requests (with filters)
-router.get("/", async (req: Request, res: Response) => {
+// Accessible to: admin
+router.get("/", requireAdmin, async (req: Request, res: Response) => {
   try {
     const {
       userId,
@@ -77,7 +79,8 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // GET /api/reimbursements/:id - Get a specific reimbursement request
-router.get("/:id", async (req: Request, res: Response) => {
+// Accessible to: owner or admin
+router.get("/:id", requireOwnershipOrAdmin('userId'), async (req: Request, res: Response) => {
   try {
     const reimbursement = await ReimbursementRequest.findById(req.params.id)
       .populate("userId", "email profile")
@@ -106,7 +109,8 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 // PATCH /api/reimbursements/:id/status - Update reimbursement status (admin)
-router.patch("/:id/status", async (req: Request, res: Response) => {
+// Accessible to: admin only
+router.patch("/:id/status", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { status, reviewedBy, adminNotes, paidAt } = req.body;
 

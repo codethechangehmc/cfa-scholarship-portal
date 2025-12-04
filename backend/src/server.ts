@@ -4,9 +4,9 @@ import session from 'express-session';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import MongoStore from 'connect-mongo';
-import routes from './routes/users';
-import passport from 'passport';
+import routes from './routes/index';
 import './utils/passportConfig';
+import passport from 'passport';
 
 const {
   BACKEND_PORT = '8080',
