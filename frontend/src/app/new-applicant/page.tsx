@@ -435,17 +435,25 @@ const nextSection = (): void => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-lg">
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <h1 className="text-3xl font-bold text-indigo-900 mb-2">
-            Children's Foundation of America Scholarship
-          </h1>
-          <p className="text-gray-600">2025-2026 School Year Application</p>
-          <p className="text-sm text-red-600 font-semibold mt-2">Deadline: June 1st, 2025</p>
-        </div>
+{/* Header */}
+<div className="bg-white shadow-lg">
+  <div className="max-w-5xl mx-auto px-6 py-8">
+    <div className="flex items-center gap-6">
+      <img 
+        src="/Logo.png" 
+        alt="Children's Foundation of America Logo" 
+        className="h-16 w-16 object-contain flex-shrink-0"
+      />
+      <div>
+        <h1 className="text-3xl font-bold text-indigo-900 mb-2">
+          Children's Foundation of America Scholarship
+        </h1>
+        <p className="text-gray-600">2025-2026 School Year Application</p>
+        <p className="text-sm text-red-600 font-semibold mt-2">Deadline: June 1st, 2025</p>
       </div>
-
+    </div>
+  </div>
+</div>
       {/* Progress Bar */}
       <div className="max-w-5xl mx-auto px-6 py-6">
         <div className="bg-white rounded-lg shadow-md p-6">
