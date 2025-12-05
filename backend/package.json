@@ -11,16 +11,25 @@
     "@aws-sdk/client-s3": "^3.937.0",
     "@aws-sdk/s3-request-presigner": "^3.937.0",
     "@types/multer": "^2.0.0",
+    "bcryptjs": "^3.0.3",
+    "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.18.2",
-    "mongoose": "^7.0.0",
-    "multer": "^2.0.2"
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "express-validator": "^7.3.1",
+    "mongodb": "^6",
+    "mongoose": "^9.0.0",
+    "multer": "^2.0.2",
+    "passport": "^0.7.0",
+    "passport-custom": "^1.1.1",
+    "passport-local": "^1.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/express": "^4.17.0",
+    "@types/express-session": "^1",
     "@types/node": "^24.7.2",
+    "@types/passport-local": "^1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.0"
   }

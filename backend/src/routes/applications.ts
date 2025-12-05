@@ -1,10 +1,11 @@
 import { Router, Request, Response } from "express";
 import Application from "../models/Application";
-import User from "../models/User"; // Import to register the model
+import { requireAdmin, requireOwnershipOrAdmin } from '../middleware/auth';
 
 const router = Router();
 
 // POST /api/applications/new - Create a new application
+// Accessible to: logged in users
 router.post("/new", async (req: Request, res: Response) => {
   try {
     const applicationData = {
@@ -34,6 +35,7 @@ router.post("/new", async (req: Request, res: Response) => {
 });
 
 // POST /api/applications/renewal - Create a renewal application
+// Accessible to: logged in users
 router.post("/renewal", async (req: Request, res: Response) => {
   try {
     const applicationData = {
@@ -63,7 +65,8 @@ router.post("/renewal", async (req: Request, res: Response) => {
 });
 
 // GET /api/applications - Get all applications (with filters)
-router.get("/", async (req: Request, res: Response) => {
+// Accessible to: admin only
+router.get("/", requireAdmin, async (req: Request, res: Response) => {
   try {
     const {
       userId,
@@ -107,7 +110,9 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // GET /api/applications/:id - Get a specific application
-router.get("/:id", async (req: Request, res: Response) => {
+// Accessible to: owner or admin
+// NOTE:  middleware expects the owner id to be in req.params.userId, req.body.userId, req.query.userId
+router.get("/:id", requireOwnershipOrAdmin('userId'), async (req: Request, res: Response) => {
   try {
     const application = await Application.findById(req.params.id)
       .populate("userId", "email profile")
@@ -136,7 +141,8 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 // PATCH /api/applications/:id/status - Update application status (admin only)
-router.patch("/:id/status", async (req: Request, res: Response) => {
+// Accessible to: admin only
+router.patch("/:id/status", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { status, reviewedBy } = req.body;
 
@@ -173,7 +179,8 @@ router.patch("/:id/status", async (req: Request, res: Response) => {
 });
 
 // POST /api/applications/:id/notes - Add admin note to application
-router.post("/:id/notes", async (req: Request, res: Response) => {
+// Accessible to: admin only
+router.post("/:id/notes", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { note, createdBy } = req.body;
 
