@@ -11,5 +11,8 @@
     "frontend",
     "backend"
   ],
-  "packageManager": "yarn@4.10.3"
+  "packageManager": "yarn@4.10.3",
+  "dependencies": {
+    "lucide-react": "^0.555.0"
+  }
 }
