@@ -6,8 +6,10 @@ import { FileText, User, Briefcase, Home, Send, CheckCircle, AlertCircle } from 
 interface FormData {
   firstName: string;
   lastName: string;
+  email: string;
   phone: string;
   address: string;
+  dob: string;
   currentAge: string;
   enrolled: string;
   schoolName: string;
@@ -46,8 +48,10 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
+    email: '',
     phone: '',
     address: '',
+    dob: '',
     currentAge: '',
     enrolled: '',
     schoolName: '',
@@ -124,92 +128,42 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
     setError('');
 
     try {
-      // Generate a temporary userId (in production, this would come from auth)
-      const tempUserId = '000000000000000000000000'; // Placeholder - replace with real auth later
+      // Generate placeholder IDs (in production, these would come from auth)
+      const tempUserId = '000000000000000000000000';
+      const tempApplicationId = '000000000000000000000000';
 
-      // Map form data to backend schema
-      const applicationData = {
+      // Map form data to RenewalChecklist schema
+      const checklistData = {
         userId: tempUserId,
+        applicationId: tempApplicationId,
         academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
-        personalInfo: {
-          fullName: `${formData.firstName} ${formData.lastName}`,
-          email: formData.email,
-          phone: formData.phone,
-          mailingAddress: {
-            street: formData.address.split(',')[0] || formData.address,
-            city: formData.address.split(',')[1]?.trim() || '',
-            state: formData.address.split(',')[2]?.trim() || '',
-            zipCode: formData.address.split(',')[3]?.trim() || ''
-          },
-          dateOfBirth: formData.dob,
-          currentAge: parseInt(formData.currentAge) || undefined
-        },
-        educationInfo: {
-          hasHighSchoolDiploma: formData.hasDiploma === 'yes',
-          collegeName: formData.schoolName,
-          isAccepted: true,
-          yearInSchool: formData.yearInSchool,
-          attendanceType: formData.attendance,
-          unitsEnrolled: parseInt(formData.units) || 0,
+        reportingPeriod: formData.reportingPeriod || 'Not specified',
+        academicUpdate: {
           currentGPA: parseFloat(formData.gpa) || 0,
-          majorOrCourseOfStudy: formData.major || undefined
+          unitsEnrolled: parseInt(formData.units) || 0,
+          attendanceType: formData.attendance === 'full' ? 'Full Time' : 'Part Time',
         },
-        livingSituation: {
-          currentDescription: formData.currentLiving,
-          willContinue: formData.continueLiving === 'yes',
-          futurePlans: formData.futurePlans || undefined
-        },
-        employmentInfo: {
+        employmentUpdate: {
           isEmployed: formData.employed === 'yes',
           employer: formData.workplace || undefined,
-          position: formData.positionTitle || undefined,
-          responsibilities: formData.responsibilities || undefined,
-          hourlyRate: parseFloat(formData.payRate) || undefined,
           hoursPerWeek: parseInt(formData.hoursPerWeek) || undefined,
-          employerContact: {
-            name: formData.employerContact || '',
-            phoneOrEmail: formData.employerPhone || ''
-          },
-          plansToContinueWhileInSchool: formData.continueWorking === 'yes' || undefined,
-          isSeekingEmployment: formData.seekingEmployment === 'yes' || undefined
         },
-        essays: {
-          reasonForRequest: formData.scholarshipReason,
-          educationAndCareerGoals: formData.goals,
-          whyGoodCandidate: formData.whyCandidate,
-          howScholarshipHelped: formData.howHelped || undefined
+        complianceChecklist: {
+          maintainedGPAOver2: formData.compliance.includes('gpa'),
+          attendingFullTimeOrWorkingPartTime: formData.compliance.includes('attendance'),
+          cleanArrestRecord: formData.compliance.includes('arrest'),
+          noIllegalSubstances: formData.compliance.includes('substances'),
+          compliedWithPolicies: formData.compliance.includes('policies'),
         },
-        requiredDocuments: {
-          highSchoolDiplomaOrGED: {
-            required: false,
-            uploaded: false
-          },
-          transcripts: {
-            required: true,
-            uploaded: false
-          },
-          enrollmentVerification: {
-            required: true,
-            uploaded: false
-          },
-          employmentVerification: {
-            required: formData.attendance === 'Part Time',
-            uploaded: false
-          },
-          recommendationLetter: {
-            submitted: false
-          }
-        },
-        adminNotes: []
       };
 
-      // Call backend API for renewal
-      const response = await fetch('http://localhost:8080/api/applications/renewal', {
+      // Call backend API for renewal checklist
+      const response = await fetch('http://localhost:8080/api/renewal-checklists', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(applicationData)
+        body: JSON.stringify(checklistData)
       });
 
       const result = await response.json();
@@ -439,6 +393,20 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Primary Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Phone <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -459,6 +427,20 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
                     type="text"
                     name="address"
                     value={formData.address}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Date of Birth <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="dob"
+                    value={formData.dob}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     required

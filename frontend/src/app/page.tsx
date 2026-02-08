@@ -131,6 +131,11 @@ export default function Home() {
         <div className="mt-8 text-center text-sm text-gray-600">
           <p>Questions? Contact us at (909) 426-0773</p>
           <p className="mt-2">Email: aofstedahl@trinityys.org</p>
+          <p className="mt-4">
+            <Link href="/admin" className="text-indigo-500 hover:text-indigo-700 hover:underline transition-colors">
+              Admin Dashboard
+            </Link>
+          </p>
         </div>
       </div>
     </div>
