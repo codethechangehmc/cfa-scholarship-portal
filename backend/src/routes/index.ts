@@ -5,6 +5,7 @@ import reimbursementRoutes from "./reimbursements";
 import acceptanceFormRoutes from "./acceptanceForms";
 import fileRoutes from "./files";
 import userRoutes from "./users";
+import adminRoutes from "./admin";
 import { ensureAuthenticated } from '../middleware/auth';
 
 const router = Router();
@@ -16,5 +17,6 @@ router.use("/api/reimbursements", reimbursementRoutes);
 router.use("/api/acceptance-forms", acceptanceFormRoutes);
 router.use("/api/files", ensureAuthenticated, fileRoutes);
 router.use("/users", userRoutes);
+router.use("/api/admin", adminRoutes);
 
 export default router;
