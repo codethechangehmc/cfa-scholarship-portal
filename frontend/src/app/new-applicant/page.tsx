@@ -3,6 +3,7 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { FileText, User, Briefcase, Home, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
+import { useAuth } from '@/context/AuthContext';
 
 interface FormData {
   firstName: string;
@@ -57,6 +58,8 @@ interface Section {
 }
 
 export default function ScholarshipPortal(): React.ReactElement {
+  const { user } = useAuth();
+  const userId = user?._id || '000000000000000000000000';
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -166,12 +169,9 @@ const isValidPhone = (phone: string): boolean => {
     setError('');
 
     try {
-      // Generate a temporary userId (in production, this would come from auth)
-      const tempUserId = '000000000000000000000000'; // Placeholder - replace with real auth later
-
       // Map form data to backend schema
       const applicationData = {
-        userId: tempUserId,
+        userId,
         academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
         personalInfo: {
           fullName: `${formData.firstName} ${formData.lastName}`,
@@ -1316,7 +1316,7 @@ const nextSection = (): void => {
 
                 <div className="space-y-6">
                   <FileUpload
-                    userId="000000000000000000000000"
+                    userId={userId}
                     relatedEntityType="application"
                     relatedEntityId={applicationId}
                     documentType="diploma"
@@ -1330,7 +1330,7 @@ const nextSection = (): void => {
                   />
 
                   <FileUpload
-                    userId="000000000000000000000000"
+                    userId={userId}
                     relatedEntityType="application"
                     relatedEntityId={applicationId}
                     documentType="transcripts"
@@ -1344,7 +1344,7 @@ const nextSection = (): void => {
                   />
 
                   <FileUpload
-                    userId="000000000000000000000000"
+                    userId={userId}
                     relatedEntityType="application"
                     relatedEntityId={applicationId}
                     documentType="enrollment"
@@ -1359,7 +1359,7 @@ const nextSection = (): void => {
 
                   {formData.attendance === 'part' && (
                     <FileUpload
-                      userId="000000000000000000000000"
+                      userId={userId}
                       relatedEntityType="application"
                       relatedEntityId={applicationId}
                       documentType="employment"
@@ -1374,7 +1374,7 @@ const nextSection = (): void => {
                   )}
 
                   <FileUpload
-                    userId="000000000000000000000000"
+                    userId={userId}
                     relatedEntityType="application"
                     relatedEntityId={applicationId}
                     documentType="recommendations"

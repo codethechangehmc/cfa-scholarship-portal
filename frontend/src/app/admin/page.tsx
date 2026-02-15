@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ClipboardList, ChevronDown, ChevronUp, Filter, RefreshCw,
@@ -8,9 +9,9 @@ import {
   GraduationCap, User, Briefcase, Home, FileText, MessageSquare,
   Users, DollarSign, Award
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const API_BASE = 'http://localhost:8080';
-const PLACEHOLDER_USER_ID = '000000000000000000000000';
 
 type AppStatus = 'draft' | 'submitted' | 'under_review' | 'approved' | 'denied';
 type ChecklistStatus = 'pending' | 'submitted' | 'reviewed';
@@ -294,7 +295,8 @@ function ApplicationDetail({ app, onStatusChange, onNoteAdded }: {
       const res = await fetch(`${API_BASE}/api/applications/${app._id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, reviewedBy: PLACEHOLDER_USER_ID }),
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
       if (data.success) {
@@ -314,7 +316,8 @@ function ApplicationDetail({ app, onStatusChange, onNoteAdded }: {
       const res = await fetch(`${API_BASE}/api/applications/${app._id}/notes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note: newNote, createdBy: PLACEHOLDER_USER_ID }),
+        credentials: 'include',
+        body: JSON.stringify({ note: newNote }),
       });
       const data = await res.json();
       if (data.success) {
@@ -586,7 +589,8 @@ function ReimbursementDetail({ reimbursement, onStatusChange }: {
       const res = await fetch(`${API_BASE}/api/reimbursements/${reimbursement._id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, reviewedBy: PLACEHOLDER_USER_ID }),
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus }),
       });
       const data = await res.json();
       if (data.success) {
@@ -813,6 +817,8 @@ function groupByStudent(applications: Application[]): StudentGroup[] {
 // --- Main Admin Page ---
 
 export default function AdminPage() {
+  const { user, loading: authLoading, isAdmin } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<TabType>('students');
   const [applications, setApplications] = useState<Application[]>([]);
   const [checklists, setChecklists] = useState<RenewalChecklist[]>([]);
@@ -823,12 +829,19 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
+  // Auth guard: redirect if not admin
+  useEffect(() => {
+    if (!authLoading && (!user || !isAdmin)) {
+      router.replace('/login');
+    }
+  }, [authLoading, user, isAdmin, router]);
+
   const fetchApplications = async () => {
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (typeFilter !== 'all') params.set('applicationType', typeFilter);
-      const res = await fetch(`${API_BASE}/api/applications?${params}`);
+      const res = await fetch(`${API_BASE}/api/applications?${params}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) setApplications(data.applications);
     } catch (err) {
@@ -840,7 +853,7 @@ export default function AdminPage() {
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
-      const res = await fetch(`${API_BASE}/api/renewal-checklists?${params}`);
+      const res = await fetch(`${API_BASE}/api/renewal-checklists?${params}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) setChecklists(data.checklists);
     } catch (err) {
@@ -850,7 +863,7 @@ export default function AdminPage() {
 
   const fetchAcceptanceForms = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/acceptance-forms`);
+      const res = await fetch(`${API_BASE}/api/acceptance-forms`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) setAcceptanceForms(data.forms);
     } catch (err) {
@@ -862,7 +875,7 @@ export default function AdminPage() {
     try {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') params.set('status', statusFilter);
-      const res = await fetch(`${API_BASE}/api/reimbursements?${params}`);
+      const res = await fetch(`${API_BASE}/api/reimbursements?${params}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) setReimbursements(data.reimbursements);
     } catch (err) {
@@ -894,7 +907,7 @@ export default function AdminPage() {
     setApplications((prev) =>
       prev.map((a) =>
         a._id === id
-          ? { ...a, adminNotes: [...a.adminNotes, { note, createdBy: PLACEHOLDER_USER_ID, createdAt: new Date().toISOString() }] }
+          ? { ...a, adminNotes: [...a.adminNotes, { note, createdBy: user?._id || '', createdAt: new Date().toISOString() }] }
           : a
       )
     );
@@ -913,6 +926,15 @@ export default function AdminPage() {
     setStatusFilter('all');
     setTypeFilter('all');
   };
+
+  // Show nothing while checking auth
+  if (authLoading || !user || !isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   const renderFilters = () => {
     if (tab === 'students') {

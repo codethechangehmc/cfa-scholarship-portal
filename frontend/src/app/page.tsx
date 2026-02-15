@@ -2,26 +2,57 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FileText, Award, RefreshCw, ArrowRight } from 'lucide-react';
+import { FileText, Award, RefreshCw, ArrowRight, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
+  const { user, loading, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
       <div className="bg-white shadow-lg">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="flex items-center gap-6">
-            <img
-              src="/Logo.png"
-              alt="Children's Foundation of America Logo"
-              className="h-16 w-16 object-contain flex-shrink-0"
-            />
-            <div>
-              <h1 className="text-3xl font-bold text-indigo-900 mb-2">
-                Children's Foundation of America
-              </h1>
-              <p className="text-gray-600">Scholarship Portal</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <img
+                src="/Logo.png"
+                alt="Children's Foundation of America Logo"
+                className="h-16 w-16 object-contain flex-shrink-0"
+              />
+              <div>
+                <h1 className="text-3xl font-bold text-indigo-900 mb-2">
+                  Children's Foundation of America
+                </h1>
+                <p className="text-gray-600">Scholarship Portal</p>
+              </div>
             </div>
+            {!loading && (
+              <div className="flex items-center gap-4">
+                {user ? (
+                  <>
+                    <span className="text-sm text-gray-600">
+                      {user.profile.firstName} {user.profile.lastName}
+                    </span>
+                    <button
+                      onClick={logout}
+                      className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Log out
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Log in
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

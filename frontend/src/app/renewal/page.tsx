@@ -2,6 +2,7 @@
 
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { FileText, User, Briefcase, Home, Send, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface FormData {
   firstName: string;
@@ -45,6 +46,8 @@ interface Section {
 }
 
 export default function RenewalScholarshipPortal(): React.ReactElement {
+  const { user } = useAuth();
+  const userId = user?._id || '000000000000000000000000';
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -128,14 +131,10 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
     setError('');
 
     try {
-      // Generate placeholder IDs (in production, these would come from auth)
-      const tempUserId = '000000000000000000000000';
-      const tempApplicationId = '000000000000000000000000';
-
       // Map form data to RenewalChecklist schema
       const checklistData = {
-        userId: tempUserId,
-        applicationId: tempApplicationId,
+        userId,
+        applicationId: '000000000000000000000000', // TODO: link to actual application
         academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
         reportingPeriod: formData.reportingPeriod || 'Not specified',
         academicUpdate: {
