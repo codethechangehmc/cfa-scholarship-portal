@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Shield, ArrowRight, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +9,13 @@ type Mode = "choose" | "student-login" | "student-register" | "admin-login";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, register } = useAuth();
+  const { login, register, user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/');
+    }
+  }, [loading, user, router]);
   const [mode, setMode] = useState<Mode>("choose");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

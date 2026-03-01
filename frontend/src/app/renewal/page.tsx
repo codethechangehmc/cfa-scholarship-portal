@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, User, Briefcase, Home, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -47,8 +48,18 @@ interface Section {
 }
 
 export default function RenewalScholarshipPortal(): React.ReactElement {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
+
   const userId = user?._id || '000000000000000000000000';
+
+  if (loading || !user) return <></> as React.ReactElement;
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',

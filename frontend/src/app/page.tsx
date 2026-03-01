@@ -1,12 +1,22 @@
 "use client"
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, Award, RefreshCw, ArrowRight, LogIn, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
   const { user, loading, logout, isAdmin } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
+
+  if (loading || !user) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

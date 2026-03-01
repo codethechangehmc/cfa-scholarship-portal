@@ -1,8 +1,10 @@
 "use client"
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, AlertCircle, Send, Award, DollarSign, FileText } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -18,6 +20,15 @@ interface FormData {
 }
 
 export default function ScholarshipAcceptance(): React.ReactElement {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
+
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     agreedToTerms: '',
@@ -34,6 +45,8 @@ export default function ScholarshipAcceptance(): React.ReactElement {
   const [understoodDisbursement, setUnderstoodDisbursement] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string>('');
+
+  if (loading || !user) return <></> as React.ReactElement;
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
     const { name, value } = e.target;
