@@ -63,21 +63,25 @@ export default function LoginPage() {
       {/* Header */}
       <div className="bg-white shadow-lg">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="flex items-center gap-6">
-            <img
-              src="/Logo.png"
-              alt="Children's Foundation of America Logo"
-              className="h-16 w-16 object-contain flex-shrink-0"
-            />
-            <div>
-              <h1 className="text-3xl font-bold text-indigo-900">
-                Children&apos;s Foundation of America
-              </h1>
-              <p className="text-gray-600">Scholarship Portal</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <img
+                src="/Logo.png"
+                alt="Children's Foundation of America Logo"
+                className="h-16 w-16 object-contain flex-shrink-0"
+              />
+              <div>
+                <h1 className="text-3xl font-bold text-indigo-900 mb-2">
+                  Children's Foundation of America
+                </h1>
+                <p className="text-gray-600">Scholarship Portal</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 py-12">
@@ -388,3 +392,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
