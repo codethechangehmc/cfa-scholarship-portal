@@ -60,18 +60,18 @@ interface Section {
 }
 
 export default function ScholarshipPortal(): React.ReactElement {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push('/login');
     }
-  }, [loading, user, router]);
+  }, [authLoading, user, router]);
 
   const userId = user?._id || '000000000000000000000000';
 
-  if (loading || !user) return <></> as React.ReactElement;
+  if (authLoading || !user) return <></> as React.ReactElement;
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
