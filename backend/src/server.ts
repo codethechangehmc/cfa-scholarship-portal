@@ -25,6 +25,8 @@ const allowedOrigins = new Set(configuredOrigins);
 
 const app = express();
 
+if (isProduction) app.set('trust proxy', 1);
+
 mongoose
   .connect(DB_URL)
   .then(() => console.log("Connected to database: " + DB_URL))
@@ -47,7 +49,7 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
+      return callback(null, false);
     },
     credentials: true,
   })
