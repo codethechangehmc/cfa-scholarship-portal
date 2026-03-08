@@ -184,6 +184,7 @@ const isValidPhone = (phone: string): boolean => {
       // Map form data to backend schema
       const applicationData = {
         userId,
+        tempApplicationId: applicationId,
         academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
         personalInfo: {
           fullName: `${formData.firstName} ${formData.lastName}`,

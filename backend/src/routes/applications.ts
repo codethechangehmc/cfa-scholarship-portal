@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import Application from "../models/Application";
+import File from "../models/File";
+import mongoose from "mongoose";
 
 const router = Router();
 
@@ -16,6 +18,15 @@ router.post("/new", async (req: Request, res: Response) => {
 
     const application = new Application(applicationData);
     await application.save();
+
+    // Relink any files uploaded with the temporary frontend-generated ID
+    const { tempApplicationId } = req.body;
+    if (tempApplicationId && mongoose.Types.ObjectId.isValid(tempApplicationId)) {
+      await File.updateMany(
+        { relatedEntityId: new mongoose.Types.ObjectId(tempApplicationId) },
+        { $set: { relatedEntityId: application._id } }
+      );
+    }
 
     res.status(201).json({
       success: true,
