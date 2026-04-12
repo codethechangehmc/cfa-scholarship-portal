@@ -5,7 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const multer_1 = __importDefault(require("multer"));
+const client_s3_1 = require("@aws-sdk/client-s3");
+const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const s3Upload_1 = require("../utils/s3Upload");
+const s3Client_1 = require("../utils/s3Client");
 const File_1 = __importDefault(require("../models/File"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const auth_1 = require("../middleware/auth");
@@ -124,6 +127,32 @@ router.get("/:fileId", (0, auth_1.requireOwnershipOrAdmin)('userId'), async (req
     catch (error) {
         console.error("Error fetching file:", error);
         return res.status(500).json({ error: "Failed to fetch file" });
+    }
+});
+/**
+ * GET /api/files/:fileId/presigned-url
+ * Generate a short-lived presigned URL for viewing a file
+ * Accessible to: owner or admin
+ */
+router.get("/:fileId/presigned-url", auth_1.requireAdmin, async (req, res) => {
+    try {
+        const { fileId } = req.params;
+        if (!mongoose_1.default.Types.ObjectId.isValid(fileId)) {
+            return res.status(400).json({ error: "Invalid file ID" });
+        }
+        const file = await File_1.default.findOne({ _id: fileId, isDeleted: false });
+        if (!file) {
+            return res.status(404).json({ error: "File not found" });
+        }
+        const url = new URL(file.fileMetadata.storageUrl);
+        const key = url.pathname.substring(1);
+        const command = new client_s3_1.GetObjectCommand({ Bucket: s3Client_1.S3_BUCKET_NAME, Key: key });
+        const presignedUrl = await (0, s3_request_presigner_1.getSignedUrl)(s3Client_1.s3Client, command, { expiresIn: 3600 });
+        return res.json({ url: presignedUrl });
+    }
+    catch (error) {
+        console.error("Error generating presigned URL:", error);
+        return res.status(500).json({ error: "Failed to generate presigned URL" });
     }
 });
 /**
