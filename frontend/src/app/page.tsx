@@ -16,6 +16,14 @@ export default function Home() {
   const [applications, setApplications] = React.useState<ApplicantApplicationSummary[]>([]);
   const [applicationsLoading, setApplicationsLoading] = React.useState(true);
   const [applicationsError, setApplicationsError] = React.useState('');
+  const [siteSettings, setSiteSettings] = React.useState({ schoolYear: '2025-2026', deadline: 'June 1st, 2025' });
+
+  React.useEffect(() => {
+    fetch(`${API_BASE}/api/settings`)
+      .then(r => r.json())
+      .then(data => { if (data.schoolYear) setSiteSettings(data); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -228,7 +236,7 @@ export default function Home() {
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800 mb-2">Application Deadline</h4>
-                <p className="text-sm text-red-600 font-semibold">June 1st, 2025</p>
+                <p className="text-sm text-red-600 font-semibold">{siteSettings.deadline}</p>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-800 mb-2">Contact</h4>

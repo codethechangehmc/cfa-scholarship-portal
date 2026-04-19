@@ -7,7 +7,7 @@ import {
   ClipboardList, ChevronDown, ChevronUp, Filter, RefreshCw,
   CheckCircle, XCircle, Clock, Send, ArrowLeft, StickyNote,
   GraduationCap, User, Briefcase, Home, FileText, MessageSquare,
-  Users, DollarSign, Award
+  Users, DollarSign, Award, Settings
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -16,7 +16,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 type AppStatus = 'draft' | 'submitted' | 'under_review' | 'approved' | 'denied';
 type ChecklistStatus = 'pending' | 'submitted' | 'reviewed';
 type ReimbursementStatus = 'pending' | 'approved' | 'denied' | 'paid';
-type TabType = 'students' | 'checklists' | 'acceptance' | 'reimbursements';
+type TabType = 'students' | 'checklists' | 'acceptance' | 'reimbursements' | 'settings';
 
 interface Application {
   _id: string;
@@ -909,6 +909,10 @@ export default function AdminPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [siteSettings, setSiteSettings] = useState({ schoolYear: '', deadline: '' });
+  const [settingsForm, setSettingsForm] = useState({ schoolYear: '', deadline: '' });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsMsg, setSettingsMsg] = useState('');
 
   // Auth guard: redirect if not admin
   useEffect(() => {
@@ -916,6 +920,18 @@ export default function AdminPage() {
       router.replace('/login');
     }
   }, [authLoading, user, isAdmin, router]);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.schoolYear) {
+          setSiteSettings(data);
+          setSettingsForm(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchApplications = async () => {
     try {
@@ -970,6 +986,7 @@ export default function AdminPage() {
   };
 
   const refresh = async () => {
+    if (tab === 'settings') return;
     setLoading(true);
     if (tab === 'students') await fetchApplications();
     else if (tab === 'checklists') await fetchChecklists();
@@ -1013,6 +1030,30 @@ export default function AdminPage() {
     setReimbursements((prev) =>
       prev.map((r) => (r._id === id ? { ...r, status: newStatus } : r))
     );
+  };
+
+  const handleSaveSettings = async () => {
+    setSettingsSaving(true);
+    setSettingsMsg('');
+    try {
+      const res = await fetch(`${API_BASE}/api/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(settingsForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSiteSettings(data);
+        setSettingsMsg('Settings saved successfully.');
+      } else {
+        setSettingsMsg(data.message || 'Failed to save settings.');
+      }
+    } catch {
+      setSettingsMsg('Failed to save settings.');
+    } finally {
+      setSettingsSaving(false);
+    }
   };
 
   const students = groupByStudent(applications);
@@ -1072,7 +1113,7 @@ export default function AdminPage() {
         </select>
       );
     }
-    // acceptance tab has no filters
+    // acceptance and settings tabs have no filters
     return <span className="text-sm text-gray-400">No filters available</span>;
   };
 
@@ -1207,6 +1248,57 @@ export default function AdminPage() {
       );
     }
 
+    if (tab === 'settings') {
+      return (
+        <div className="p-8 max-w-lg">
+          <h2 className="text-lg font-semibold text-gray-800 mb-6">Site Settings</h2>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">School Year</label>
+              <input
+                type="text"
+                value={settingsForm.schoolYear}
+                onChange={e => setSettingsForm(f => ({ ...f, schoolYear: e.target.value }))}
+                placeholder="e.g. 2025-2026"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-400 mt-1">Shown on application forms and used when submitting applications.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
+              <input
+                type="text"
+                value={settingsForm.deadline}
+                onChange={e => setSettingsForm(f => ({ ...f, deadline: e.target.value }))}
+                placeholder="e.g. June 1st, 2025"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-400 mt-1">Shown on the home page, new applicant page, and renewal page.</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleSaveSettings}
+                disabled={settingsSaving}
+                className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              >
+                {settingsSaving ? 'Saving…' : 'Save Settings'}
+              </button>
+              {settingsMsg && (
+                <span className={`text-sm ${settingsMsg.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                  {settingsMsg}
+                </span>
+              )}
+            </div>
+            {siteSettings.schoolYear && (
+              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
+                <strong>Current:</strong> {siteSettings.schoolYear} — Deadline: {siteSettings.deadline}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     if (tab === 'reimbursements') {
       if (reimbursements.length === 0) {
         return (
@@ -1263,14 +1355,16 @@ export default function AdminPage() {
                 <p className="text-sm text-gray-500">Review applications, checklists, acceptances, and reimbursements</p>
               </div>
             </div>
-            <button
-              onClick={refresh}
-              disabled={loading}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </button>
+            {tab !== 'settings' && (
+              <button
+                onClick={refresh}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1283,6 +1377,7 @@ export default function AdminPage() {
             { key: 'checklists' as TabType, label: 'Checklists', icon: StickyNote },
             { key: 'acceptance' as TabType, label: 'Acceptances', icon: Award },
             { key: 'reimbursements' as TabType, label: 'Reimbursements', icon: DollarSign },
+            { key: 'settings' as TabType, label: 'Settings', icon: Settings },
           ]).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
@@ -1298,15 +1393,17 @@ export default function AdminPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <Filter className="w-4 h-4" />
-              <span>Filters:</span>
+        {tab !== 'settings' && (
+          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Filter className="w-4 h-4" />
+                <span>Filters:</span>
+              </div>
+              {renderFilters()}
             </div>
-            {renderFilters()}
           </div>
-        </div>
+        )}
 
         {/* Content */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">

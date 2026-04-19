@@ -59,9 +59,19 @@ interface Section {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
 export default function ScholarshipPortal(): React.ReactElement {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [siteSettings, setSiteSettings] = useState({ schoolYear: '2025-2026', deadline: 'June 1st, 2025' });
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`)
+      .then(r => r.json())
+      .then(data => { if (data.schoolYear) setSiteSettings(data); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -185,7 +195,7 @@ const isValidPhone = (phone: string): boolean => {
       const applicationData = {
         userId,
         tempApplicationId: applicationId,
-        academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+        academicYear: siteSettings.schoolYear,
         personalInfo: {
           fullName: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
@@ -487,8 +497,8 @@ const nextSection = (): void => {
         <h1 className="text-3xl font-bold text-indigo-900 mb-2">
           Children's Foundation of America Scholarship
         </h1>
-        <p className="text-gray-600">2025-2026 School Year Application</p>
-        <p className="text-sm text-red-600 font-semibold mt-2">Deadline: June 1st, 2025</p>
+        <p className="text-gray-600">{siteSettings.schoolYear} School Year Application</p>
+        <p className="text-sm text-red-600 font-semibold mt-2">Deadline: {siteSettings.deadline}</p>
       </div>
     </div>
   </div>
