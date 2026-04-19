@@ -5,6 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const Application_1 = __importDefault(require("../models/Application"));
+const File_1 = __importDefault(require("../models/File"));
+const mongoose_1 = __importDefault(require("mongoose"));
+const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 // POST /api/applications/new - Create a new application
 // Accessible to: logged in users
@@ -18,6 +21,11 @@ router.post("/new", async (req, res) => {
         };
         const application = new Application_1.default(applicationData);
         await application.save();
+        // Relink any files uploaded with the temporary frontend-generated ID
+        const { tempApplicationId } = req.body;
+        if (tempApplicationId && mongoose_1.default.Types.ObjectId.isValid(tempApplicationId)) {
+            await File_1.default.updateMany({ relatedEntityId: new mongoose_1.default.Types.ObjectId(tempApplicationId) }, { $set: { relatedEntityId: application._id } });
+        }
         res.status(201).json({
             success: true,
             message: "New application submitted successfully",
@@ -93,6 +101,33 @@ router.get("/", async (req, res) => {
     }
     catch (error) {
         console.error("Error fetching applications:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch applications",
+            error: error.message,
+        });
+    }
+});
+// GET /api/applications/mine - Get applications for the authenticated applicant
+router.get("/mine", auth_1.ensureAuthenticated, async (req, res) => {
+    try {
+        const userId = req.user?._id;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required",
+            });
+        }
+        const applications = await Application_1.default.find({ userId })
+            .sort({ createdAt: -1 })
+            .select("_id applicationType academicYear status submittedAt reviewedAt createdAt updatedAt educationInfo.collegeName");
+        res.json({
+            success: true,
+            applications,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching applicant applications:", error);
         res.status(500).json({
             success: false,
             message: "Failed to fetch applications",

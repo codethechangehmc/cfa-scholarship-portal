@@ -5,16 +5,69 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, Award, RefreshCw, ArrowRight, LogIn, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import ApplicationStatusOverview from '@/components/ApplicationStatusOverview';
+import type { ApplicantApplicationSummary } from '@/components/ApplicationStatusOverview';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export default function Home() {
   const { user, loading, logout, isAdmin } = useAuth();
   const router = useRouter();
+  const [applications, setApplications] = React.useState<ApplicantApplicationSummary[]>([]);
+  const [applicationsLoading, setApplicationsLoading] = React.useState(true);
+  const [applicationsError, setApplicationsError] = React.useState('');
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [loading, user, router]);
+
+  useEffect(() => {
+    if (loading || !user || isAdmin) {
+      setApplications([]);
+      setApplicationsLoading(false);
+      setApplicationsError('');
+      return;
+    }
+
+    let ignore = false;
+
+    const loadApplications = async () => {
+      setApplicationsLoading(true);
+      setApplicationsError('');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/applications/mine`, {
+          credentials: 'include',
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || data.error || 'Unable to load your applications right now.');
+        }
+
+        if (!ignore) {
+          setApplications(data.applications || []);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setApplications([]);
+          setApplicationsError(error instanceof Error ? error.message : 'Unable to load your applications right now.');
+        }
+      } finally {
+        if (!ignore) {
+          setApplicationsLoading(false);
+        }
+      }
+    };
+
+    loadApplications();
+
+    return () => {
+      ignore = true;
+    };
+  }, [loading, user, isAdmin]);
 
   if (loading || !user) return null;
 
@@ -86,6 +139,14 @@ export default function Home() {
             Supporting present and former foster youth in pursuing their academic and vocational education goals.
           </p>
         </div>
+
+        {!isAdmin && (
+          <ApplicationStatusOverview
+            applications={applications}
+            loading={applicationsLoading}
+            error={applicationsError}
+          />
+        )}
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">

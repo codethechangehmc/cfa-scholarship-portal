@@ -2,6 +2,8 @@ import { Router, Request, Response } from "express";
 import Application from "../models/Application";
 import File from "../models/File";
 import mongoose from "mongoose";
+import { ensureAuthenticated } from "../middleware/auth";
+import type { AuthenticatedRequest } from "../middleware/auth";
 
 const router = Router();
 
@@ -111,6 +113,38 @@ router.get("/", async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Error fetching applications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch applications",
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/applications/mine - Get applications for the authenticated applicant
+router.get("/mine", ensureAuthenticated, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const applications = await Application.find({ userId })
+      .sort({ createdAt: -1 })
+      .select(
+        "_id applicationType academicYear status submittedAt reviewedAt createdAt updatedAt educationInfo.collegeName"
+      );
+
+    res.json({
+      success: true,
+      applications,
+    });
+  } catch (error: any) {
+    console.error("Error fetching applicant applications:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch applications",

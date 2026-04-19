@@ -26,6 +26,8 @@ services:
       - 3000:3000
     working_dir: /srv/cfa-scholarship-portal/frontend
     command: ["yarn", "dev"]
+    environment:
+      PATH: /srv/cfa-scholarship-portal/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     volumes:
       - ./frontend:/srv/cfa-scholarship-portal/frontend
       - ./yarn.lock:/srv/cfa-scholarship-portal/yarn.lock
