@@ -47,9 +47,19 @@ interface Section {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
 export default function RenewalScholarshipPortal(): React.ReactElement {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [siteSettings, setSiteSettings] = useState({ schoolYear: '2025-2026', deadline: 'June 1st, 2025' });
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/settings`)
+      .then(r => r.json())
+      .then(data => { if (data.schoolYear) setSiteSettings(data); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -147,7 +157,7 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
       const checklistData = {
         userId,
         applicationId: '000000000000000000000000', // TODO: link to actual application
-        academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+        academicYear: siteSettings.schoolYear,
         reportingPeriod: formData.reportingPeriod || 'Not specified',
         academicUpdate: {
           currentGPA: parseFloat(formData.gpa) || 0,
@@ -220,7 +230,7 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
             
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
               <p className="text-sm text-blue-800">
-                <strong>Deadline:</strong> June 1st, 2025
+                <strong>Deadline:</strong> {siteSettings.deadline}
               </p>
             </div>
 
@@ -354,8 +364,8 @@ export default function RenewalScholarshipPortal(): React.ReactElement {
         <h1 className="text-3xl font-bold text-indigo-900 mb-2">
           Children's Foundation of America Scholarship
         </h1>
-        <p className="text-gray-600">2025-2026 School Year Application</p>
-        <p className="text-sm text-red-600 font-semibold mt-2">Deadline: June 1st, 2025</p>
+        <p className="text-gray-600">{siteSettings.schoolYear} School Year Application</p>
+        <p className="text-sm text-red-600 font-semibold mt-2">Deadline: {siteSettings.deadline}</p>
       </div>
     </div>
   </div>

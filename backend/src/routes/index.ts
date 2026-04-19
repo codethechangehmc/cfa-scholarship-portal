@@ -6,6 +6,7 @@ import acceptanceFormRoutes from "./acceptanceForms";
 import fileRoutes from "./files";
 import userRoutes from "./users";
 import adminRoutes from "./admin";
+import settingsRoutes from "./settings";
 import { ensureAuthenticated } from '../middleware/auth';
 
 const router = Router();
@@ -18,5 +19,6 @@ router.use("/api/acceptance-forms", acceptanceFormRoutes);
 router.use("/api/files", ensureAuthenticated, fileRoutes);
 router.use("/users", userRoutes);
 router.use("/api/admin", adminRoutes);
+router.use("/api/settings", settingsRoutes);
 
 export default router;
